@@ -13,6 +13,7 @@ services:
       - /storage/beets/config:/config
       - /storage/media/music:/music
       - /storage/downloads:/downloads
+      - /storage/downloads/import:/import
     ports:
       - 8337:8337
     restart: unless-stopped
