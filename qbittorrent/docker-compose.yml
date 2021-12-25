@@ -4,10 +4,13 @@ services:
   qbittorrent:
     image: binhex/arch-qbittorrentvpn
     container_name: qbittorrent
+    # privileged: true #optional
+    # security_opt:
+    #   - seccomp:unconfined #optional
     environment:
       - PUID=1000
       - PGID=1041
-      - TZ='America/New_York'   
+      - TZ='America/New_York'
       - UMASK=002
       - WEBUI_PORT=8080
       - VPN_ENABLED=no
@@ -22,11 +25,12 @@ services:
       # - ADDITIONAL_PORTS=1234
       # - DEBUG=false
     volumes:
-      - ./config:/config
-      - /srv/storage02/torrents:/data/torrents
+      - /storage/qbittorrent/config:/config
+      - /storage/downloads:/data/torrents
       - /etc/localtime:/etc/localtime:ro
     ports:
       - 44488:44448
       - 36278:36278/udp
       - 8080:8080
+    shm_size: "1gb" #optional
     restart: unless-stopped
