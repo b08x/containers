@@ -1,0 +1,147 @@
+plugins: fetchart embedart convert scrub replaygain lastgenre chroma web badfiles edit fromfilename duplicates ftintitle info badfiles
+directory: /music
+library: /config/musiclibrary.db
+statefile: /config/state.pickle
+art_filename: albumart
+threaded: yes
+original_date: no
+
+badfiles:
+    check_on_import: yes
+    commands:
+        wma: ffprobe -v error
+        m4p: ffprobe -v error
+        m4a: ffprobe -v error
+        wav: /usr/local/bin/wavcheck.rb
+        wav: ffprobe -v error
+        mp3: mp3val
+        flac: flac --test --warnings-as-errors --silent
+
+musicbrainz:
+    host: musicbrainz.org
+    https: no
+    ratelimit: 1
+    ratelimit_interval: 1.0
+    searchlimit: 5
+    extra_tags: []
+    genres: no
+
+ui:
+    terminal_width: 80
+    length_diff_thresh: 10.0
+    color: yes
+    colors:
+        text_success: green
+        text_warning: yellow
+        text_error: red
+        text_highlight: red
+        text_highlight_minor: lightgray
+        action_default: turquoise
+        action: blue
+
+format_item: $artist - $album - $title
+format_album: $albumartist - $album
+time_format: '%Y-%m-%d %H:%M:%S'
+format_raw_length: no
+
+sort_album: albumartist+ album+
+sort_item: artist+ album+ disc+ track+
+sort_case_insensitive: yes
+
+ftintitle:
+    auto: yes
+    drop: no
+    format: feat. {0}
+
+convert:
+    auto: no
+    tmpdir: /tmp
+    delete_originals: false
+    dest: ~/Music
+    format: ogg
+    formats:
+        ogg:
+            command: sox -V2 $source --norm=-1.0 $dest
+            extension: ogg
+        wav: ffmpeg -i $source -y -acodec pcm_s16le $dest
+
+aunique:
+    keys: albumartist album
+    disambiguators: albumtype year label catalognum albumdisambig releasegroupdisambig
+    bracket: '[]'
+
+paths:
+    default: $albumartist/($year) $album%aunique{}/$track - $title
+    singleton: Singles/$artist/$title
+    comp: Compilations/$album%aunique{}/$track - $title
+    albumtype_soundtrack: Soundtracks/$album/$track $title
+
+import:
+    write: yes
+    copy: yes
+    move: no
+    detail: yes
+    resume: ask
+    incremental: yes
+    quiet: no
+    quiet_fallback: skip
+    timid: no
+    log: /config/beet.log
+    duplicate_action: ask
+    none_rec_action: ask
+    incremental_skip_later: no
+    from_scratch: no
+    singletons: no
+    group_albums: yes
+
+lastgenre:
+    auto: yes
+    source: album
+
+embedart:
+    auto: yes
+
+fetchart:
+    auto: yes
+
+replaygain:
+    auto: no
+
+scrub:
+    auto: yes
+
+chroma:
+  auto: no
+
+duplicates:
+  checksum: 'ffmpeg -i {file} -f crc -'
+  move: '~/Music/dupes'
+
+edit:
+  albumfields: album albumartist
+  itemfields: grouping label title track artist album albumartist
+  ignore_fields: id path
+
+replace:
+  '[\\/]': _
+  ^\.: _
+  '[\x00-\x1f]': _
+  '[<>:"\?\*\|]': _
+  \.$: _
+  \s+$: ''
+  ^\s+: ''
+  ^-: _
+
+web:
+    host: 0.0.0.0
+    port: 8337
+
+path_sep_replace: _
+drive_sep_replace: _
+asciify_paths: yes
+max_filename_length: 0
+va_name: Various
+ignore_hidden: yes
+per_disc_numbering: no
+#verbose: 2
+terminal_encoding: UTF-8
