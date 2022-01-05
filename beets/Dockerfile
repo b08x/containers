@@ -49,6 +49,7 @@ RUN \
 	sqlite-libs \
 	tar \
   sudo \
+  neovim \
 	wget && \
  echo "**** compile mp3gain ****" && \
  mkdir -p \
@@ -110,7 +111,7 @@ RUN echo 'abc ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # environment settings
 ENV BEETSDIR="/config" \
-EDITOR="nano" \
+EDITOR="nvim" \
 HOME="/config"
 
 # copy local files
