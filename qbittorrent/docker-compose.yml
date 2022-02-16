@@ -25,7 +25,7 @@ services:
       # - ADDITIONAL_PORTS=1234
       # - DEBUG=false
     volumes:
-      - /storage/qbittorrent/config:/config
+      - /storage/containers/qbittorrent/config:/config
       - /storage/downloads:/data/torrents
       - /etc/localtime:/etc/localtime:ro
     ports:
