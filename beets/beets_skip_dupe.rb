@@ -43,7 +43,7 @@ end
 
 duplicate.each do |folder|
   File.open(duplicates_to_remove, 'a') do |f|
-    f << folder
+    f << folder.to_s
   end
 end
 
