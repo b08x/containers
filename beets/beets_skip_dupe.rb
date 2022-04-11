@@ -47,7 +47,7 @@ duplicate.each do |folder|
   end
 end
 
-#OLDIFS=$IFS; IFS=$'\n'; for folder in $(cat to_import.txt); do beet import $folder; done
+#OLDIFS=$IFS; IFS=$'\n'; for folder in $(tac to_import.txt); do beet import $folder; done
 
 #skipped.each do |folder|
 #  puts "#{folder.to_s.shellescape}"
