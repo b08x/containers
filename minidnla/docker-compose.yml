@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  qbittorrent:
+  minidlna:
     image: geekduck/minidlna:latest
     container_name: minidlna
     network: host
