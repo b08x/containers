@@ -1,1 +1,6 @@
 docker-beets
+pihole/etc-*
+beets/root/.cache/
+beets/root/.local/
+beets/root/.gnupg/
+beets/root/.ssh/
