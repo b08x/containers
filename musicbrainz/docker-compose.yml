@@ -1,0 +1,18 @@
+---
+version: "3.8"
+services:
+  musicbrainz:
+    image: ghcr.io/linuxserver/musicbrainz
+    container_name: musicbrainz
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - BRAINZCODE=nlz4cluVnYByiExewt5Yras8FN0lz9BHzTuehJkg
+      - WEBADDRESS=192.168.41.2
+    volumes:
+      - /storage/containers/musicbrainz/config:/config
+      - /storage/containers/musicbrainz/data:/data
+    ports:
+      - 5000:5000
+    restart: unless-stopped
