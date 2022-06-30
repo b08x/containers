@@ -19,6 +19,13 @@ WORKDIR /home/yay
 RUN git clone https://aur.archlinux.org/yay.git
 RUN cd yay && makepkg -si --noconfirm --needed
 
+RUN yay -S --noconfirm --needed --cleanafter --useask \
+	jack2-dbus pulseaudio-jack pulseaudio-alsa \
+	nfs-utils htop nss chromium && \
+	yay -Scc --noconfirm
+
+RUN export TMPDIR=/var/tmp
+
 COPY etc/skel/.config/ /etc/skel/.config/
 
 CMD i3

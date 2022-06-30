@@ -1,0 +1,6 @@
+[submodule "acousticbrainz-server"]
+	path = acousticbrainz-server
+	url = https://github.com/metabrainz/acousticbrainz-server.git
+[submodule "musicbrainz-docker"]
+	path = musicbrainz-docker
+	url = https://github.com/metabrainz/musicbrainz-docker.git
