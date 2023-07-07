@@ -1,0 +1,20 @@
+---
+version: "3.8"
+
+services:
+  beets:
+    #image: lscr.io/linuxserver/beets
+    image: beets:latest
+    container_name: beets
+    environment:
+      - PUID=1000
+      - PGID=1041
+      - TZ=America/New_York
+    volumes:
+      - /storage/containers/beets/config:/config
+      - /storage/media/music:/music
+      - /storage/downloads:/downloads
+      - /media/media/to_sort:/import
+    ports:
+      - 8337:8337
+    restart: unless-stopped

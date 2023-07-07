@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  qbittorrent:
+    image: binhex/arch-qbittorrentvpn
+    container_name: qbittorrent
+    # privileged: true #optional
+    # security_opt:
+    #   - seccomp:unconfined #optional
+    environment:
+      - PUID=1000
+      - PGID=1041
+      - TZ='America/New_York'
+      - UMASK=002
+      - WEBUI_PORT=8080
+      - VPN_ENABLED=no
+      # - VPN_USER=myusername
+      # - VPN_PASS=mypassword
+      # - VPN_PROV=pia
+      # - VPN_CLIENT=openvpn
+      # - STRICT_PORT_FORWARD=yes
+      - ENABLE_PRIVOXY=no
+      # - LAN_NETWORK=192.168.1.0/24
+      # - NAME_SERVERS=209.222.18.222,84.200.69.80,37.235.1.174,1.1.1.1,209.222.18.218,37.235.1.177,84.200.70.40,1.0.0.1
+      # - ADDITIONAL_PORTS=1234
+      # - DEBUG=false
+    volumes:
+      - ./config:/config
+      - /home/b08x/Downloads:/data/torrents
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 44488:44448
+      - 36278:36278/udp
+      - 8080:8080
+    shm_size: "1gb" #optional
+    restart: unless-stopped

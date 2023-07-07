@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  minidlna:
+    image: geekduck/minidlna:latest
+    container_name: minidlna
+    network: host
+    environment:
+      - PUID=1000
+      - PGID=1041
+      - TZ='America/New_York'
+      - UMASK=002
+    volumes:
+      - /media/movies:/opt/Movies
+      - /media/tv:/opt/TV
+      - /media/documentaries:/opt/Documentaries
+      - /media/anime:/opt/Anime
+      - /storage/containers/minidlna/minidlna.conf:/etc/minidlna.conf
+      - /etc/localtime:/etc/localtime:ro
+    shm_size: "1gb" #optional
+    restart: unless-stopped

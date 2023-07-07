@@ -1,0 +1,17 @@
+---
+version: "3.8"
+
+services:
+  rhasspy:
+    image: "rhasspy/rhasspy:latest"
+    container_name: rhasspy
+    restart: unless-stopped
+    volumes:
+        - "$HOME/.config/rhasspy/profiles:/profiles"
+        - "/etc/localtime:/etc/localtime:ro"
+    ports:
+        - "12101:12101/tcp"
+        - "12333:12333/udp"
+    devices:
+        - "/dev/snd:/dev/snd"
+    command: --user-profiles /profiles --profile en
