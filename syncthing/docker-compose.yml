@@ -11,12 +11,7 @@ services:
       - TZ=Etc/UTC
     volumes:
       - ./config:/config
-      - /backup/b08x/Workspace:/Workspace
-      - /backup/b08x/Documents:/Documents
-      - /backup/b08x/Sessions:/Sessions
-      - /backup/b08x/Notebooks:/Notebooks
-      - /backup/b08x/Images:/Images
-      - /backup/b08x/Library:/Library
+      - /backup:/backup
     ports:
       - 8384:8384
       - 22000:22000/tcp

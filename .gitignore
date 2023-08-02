@@ -1,1 +1,5 @@
 ArchiveBox/**
+syncthing/config/Sync
+syncthing/config/index-v0.14.0.db
+syncthing/config/*.pem
+syncthing/config/csrftokens.txt
