@@ -1,96 +1,143 @@
 # Usage:
-#     docker-compose run archivebox init --setup
-#     docker-compose up
-#     echo "https://example.com" | docker-compose run archivebox archivebox add
-#     docker-compose run archivebox add --depth=1 https://example.com/some/feed.rss
-#     docker-compose run archivebox config --set PUBLIC_INDEX=True
-#     docker-compose run archivebox help
+#     docker compose run archivebox init --setup
+#     docker compose up
+#     echo "https://example.com" | docker compose run archivebox archivebox add
+#     docker compose run archivebox add --depth=1 https://example.com/some/feed.rss
+#     docker compose run archivebox config --set MEDIA_MAX_SIZE=750m
+#     docker compose run archivebox help
 # Documentation:
 #     https://github.com/ArchiveBox/ArchiveBox/wiki/Docker#docker-compose
 
-version: '2.4'   # '3.9' or greater also works
+version: '3.9'
 
 services:
     archivebox:
-        build: .                              # for developers working on archivebox
-          # image: ${DOCKER_IMAGE:-archivebox/archivebox:master}
-        container_name: archivebox
+      #        image: ${DOCKER_IMAGE:-archivebox/archivebox:dev}
         command: server --quick-init 0.0.0.0:8000
         ports:
             - 8000:8000
-        environment:
-            - ALLOWED_HOSTS=*                   # add any config options you want as env vars
-            - MEDIA_MAX_SIZE=75m
-            - SEARCH_BACKEND_ENGINE=sonic     # uncomment these if you enable sonic below
-            - SEARCH_BACKEND_HOST_NAME=sonic
-            - SEARCH_BACKEND_PASSWORD=SecretPassword
-            - PUID=1000
-            - PGID=1000
-            - TZ=America/New_York
-            - TIMEOUT=120
-            - MEDIA_TIMEOUT=3600
-            - USE_COLOR=True
-            - SHOW_PROGRESS=True
-            - SAVE_TITLE=True
-            - SAVE_FAVICON=True
-            - SAVE_WGET=False
-            - SAVE_WARC=False
-            - SAVE_PDF=True
-            - SAVE_SCREENSHOT=False
-            - SAVE_DOM=True
-            - SAVE_SINGLEFILE=True
-            - SAVE_READABILITY=True
-            - SAVE_MERCURY=False
-            - SAVE_GIT=True
-            - SAVE_MEDIA=True
-            - SAVE_ARCHIVE_DOT_ORG=False
-            - CHECK_SSL_VALIDITY=True
-            - SAVE_WGET_REQUISITES=True
         volumes:
-            - ./storage/archivebox/data:/data
-            # - ./archivebox:/app/archivebox    # for developers working on archivebox
+            - ./data:/data
+            # - ./etc/crontabs:/var/spool/cron/crontabs  # uncomment this and archivebox_scheduler below to set up automatic recurring archive jobs
+            - ./archivebox:/app/archivebox             # uncomment this to mount the ArchiveBox source code at runtime (for developers working on archivebox)
+        build: .                                       # uncomment this to build the image from source code at buildtime (for developers working on archivebox)
+        dns:                                           # uncomment this and pihole container below for ad-blocking during archiving
+            - 10.5.0.2
+        environment:
+            - PUID=1000                       # set to your host user's UID & GID if you encounter permissions issues
+            - PGID=1000
+            - SEARCH_BACKEND_ENGINE=sonic     # uncomment these and sonic container below for better full-text search
+            - SEARCH_BACKEND_HOST_NAME=sonic
+            - SEARCH_BACKEND_PASSWORD=SomeSecretPassword
+            - ALLOWED_HOSTS=*                   # restrict this to only accept incoming traffic via specific domain name
+            - MEDIA_MAX_SIZE=1024m             # increase this filesize limit to allow archiving larger audio/video files
+            - TIMEOUT=120                      # increase this number to 120+ seconds if you see many slow downloads timing out
+            - CHECK_SSL_VALIDITY=True         # set to False to disable strict SSL checking (allows saving URLs w/ broken certs)
+            - SAVE_ARCHIVE_DOT_ORG=False     # set to False to disable submitting all URLs to Archive.org when archiving
+            - PUBLIC_INDEX=True               # set to False to prevent anonymous users from viewing snapshot list
+            - PUBLIC_SNAPSHOTS=True           # set to False to prevent anonymous users from viewing snapshot content
+            - PUBLIC_ADD_VIEW=False           # set to True to allow anonymous users to submit new URLs to archive
+            - RIPGREP_BINARY=rga
+            - CHROME_SANDBOX=False
+            - SAVE_WGET=False
+            - SAVE_FAVICON=False
+            - SAVE_WARC=False
+            - SAVE_GIT=True
+            - SAVE_SCREENSHOT=False
+        networks:
+          network:
+            ipv4_address: 10.5.0.3
+            # ...
+            # add further configuration options from archivebox/config.py as needed (to apply them only to this container)
+            # or set using `docker compose run archivebox config --set SOME_KEY=someval` (to persist config across all containers)
 
-    # To run the Sonic full-text search backend, first download the config file to sonic.cfg
-    # curl -O https://raw.githubusercontent.com/ArchiveBox/ArchiveBox/master/etc/sonic.cfg
-    # after starting, backfill any existing Snapshots into the index: docker-compose run archivebox update --index-only
+
+    ######## Optional Addons: tweak examples below as needed for your specific use case ########
+
+    ### Example: To run the Sonic full-text search backend, first download the config file to sonic.cfg
+    #   $ curl -O https://raw.githubusercontent.com/ArchiveBox/ArchiveBox/master/etc/sonic.cfg
+    # After starting, backfill any existing Snapshots into the full-text index:
+    #   $ docker-compose run archivebox update --index-only
+
     sonic:
-       image: valeriansaliou/sonic:v1.3.0
-       container_name: sonic
+       image: valeriansaliou/sonic:latest
        expose:
            - 1491
        environment:
-           - SEARCH_BACKEND_PASSWORD=SecretPassword
+           - SEARCH_BACKEND_PASSWORD=SomeSecretPassword
        volumes:
-           - /storage/archivebox/data/sonic/sonic.cfg:/etc/sonic.cfg:ro
-           - /storage/archivebox/data/sonic:/var/lib/sonic/store
+           - ./sonic.cfg:/etc/sonic.cfg:ro
+           - ./data/sonic:/var/lib/sonic/store
+       networks:
+         network:
+           ipv4_address: 10.5.0.5
+    
+    
+    ### Example: To run pihole in order to block ad/tracker requests during archiving,
+    # uncomment this block and set up pihole using its admin interface
 
+    pihole:
+      image: pihole/pihole:latest
+      container_name: pihole
+      ports:
+        - 8090:80       # uncomment to access the admin HTTP interface on http://localhost:8090
+      environment:
+        - WEBPASSWORD=adminpassword
+      volumes:
+        - ./etc/pihole:/etc/pihole
+        - ./etc/dnsmasq:/etc/dnsmasq.d
+      networks:
+        network:
+          ipv4_address: 10.5.0.2
 
-    ### Optional Addons: tweak these examples as needed for your specific use case
+networks:
+  network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
 
-    # Example: Run scheduled imports in a docker instead of using cron on the
-    # host machine, add tasks and see more info with archivebox schedule --help
-    # scheduler:
-    #    image: archivebox/archivebox:latest
-    #    command: schedule --foreground --every=day --depth=1 'https://getpocket.com/users/USERNAME/feed/all'
+    ### Example: Enable ability to run regularly scheduled archiving tasks by uncommenting this container
+    #   $ docker compose run archivebox schedule --every=day --depth=1 'https://example.com/some/rss/feed.xml'
+    # then restart the scheduler container to apply the changes to the schedule
+    #   $ docker compose restart archivebox_scheduler
+
+    # archivebox_scheduler:
+    #    image: ${DOCKER_IMAGE:-archivebox/archivebox:dev}
+    #    command: schedule --foreground
     #    environment:
-    #        - USE_COLOR=True
-    #        - SHOW_PROGRESS=False
+    #        - MEDIA_MAX_SIZE=750m               # increase this number to allow archiving larger audio/video files
+    #        # - TIMEOUT=60                      # increase if you see timeouts often during archiving / on slow networks
+    #        # - ONLY_NEW=True                   # set to False to retry previously failed URLs when re-adding instead of skipping them
+    #        # - CHECK_SSL_VALIDITY=True         # set to False to allow saving URLs w/ broken SSL certs
+    #        # - SAVE_ARCHIVE_DOT_ORG=True       # set to False to disable submitting URLs to Archive.org when archiving
+    #        # - PUID=502                        # set to your host user's UID & GID if you encounter permissions issues
+    #        # - PGID=20
     #    volumes:
     #        - ./data:/data
+    #        - ./etc/crontabs:/var/spool/cron/crontabs
+    #    # cpus: 2                               # uncomment / edit these values to limit container resource consumption
+    #    # mem_limit: 2048m
+    #    # shm_size: 1024m
 
-    # Example: Put Nginx in front of the ArchiveBox server for SSL termination
+
+    ### Example: Put Nginx in front of the ArchiveBox server for SSL termination
+
     # nginx:
     #     image: nginx:alpine
     #     ports:
     #         - 443:443
     #         - 80:80
     #     volumes:
-    #         - ./etc/nginx/nginx.conf:/etc/nginx/nginx.conf
+    #         - ./etc/nginx.conf:/etc/nginx/nginx.conf
     #         - ./data:/var/www
 
-    # Example: run all your ArchiveBox traffic through a WireGuard VPN tunnel
+
+    ### Example: run all your ArchiveBox traffic through a WireGuard VPN tunnel
+
     # wireguard:
-    #   image: linuxserver/wireguard
+    #   image: linuxserver/wireguard:latest
     #   network_mode: 'service:archivebox'
     #   cap_add:
     #     - NET_ADMIN
@@ -102,14 +149,16 @@ services:
     #     - /lib/modules:/lib/modules
     #     - ./wireguard.conf:/config/wg0.conf:ro
 
-    # Example: Run PYWB in parallel and auto-import WARCs from ArchiveBox
+
+    ### Example: Run PYWB in parallel and auto-import WARCs from ArchiveBox
+
     # pywb:
     #     image: webrecorder/pywb:latest
-    #     entrypoint: /bin/sh 'wb-manager add default /archivebox/archive/*/warc/*.warc.gz; wayback --proxy;'
+    #     entrypoint: /bin/sh -c '(wb-manager init default || test $$? -eq 2) && wb-manager add default /archivebox/archive/*/warc/*.warc.gz; wayback;'
     #     environment:
     #         - INIT_COLLECTION=archivebox
     #     ports:
     #         - 8080:8080
     #     volumes:
-    #         ./data:/archivebox
-    #         ./data/wayback:/webarchive
+    #         - ./data:/archivebox
+    #         - ./data/wayback:/webarchive
